@@ -1,11 +1,6 @@
-from __future__ import absolute_import, unicode_literals
-
 import re
 
-try:
-    from html.entities import name2codepoint
-except ImportError:
-    from htmlentitydefs import name2codepoint
+from html.entities import name2codepoint
 
 from .sgml import *
 
@@ -42,11 +37,8 @@ _cp1252 = {
 class _BaseHTMLProcessor(sgmllib.SGMLParser, object):
     special = re.compile('''[<>'"]''')
     bare_ampersand = re.compile(r"&(?!#\d+;|#x[0-9a-fA-F]+;|\w+;)")
-    elements_no_end_tag = set([
-      'area', 'base', 'basefont', 'br', 'col', 'command', 'embed', 'frame',
-      'hr', 'img', 'input', 'isindex', 'keygen', 'link', 'meta', 'param',
-      'source', 'track', 'wbr'
-    ])
+    elements_no_end_tag = {'area', 'base', 'basefont', 'br', 'col', 'command', 'embed', 'frame', 'hr', 'img', 'input',
+                           'isindex', 'keygen', 'link', 'meta', 'param', 'source', 'track', 'wbr'}
 
     def __init__(self, encoding=None, _type='application/xhtml+xml'):
         if encoding:

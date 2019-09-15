@@ -26,49 +26,22 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-from __future__ import absolute_import, unicode_literals
-
 import xml.sax
 
-try:
-    from io import BytesIO as _StringIO
-except ImportError:
-    try:
-        from cStringIO import StringIO as _StringIO
-    except ImportError:
-        from StringIO import StringIO as _StringIO
+from io import BytesIO as _StringIO
 
-try:
-    import urllib.parse
-except ImportError:
-    from urlparse import urlparse
+import urllib.parse
 
-    class urllib(object):
-        class parse(object):
-            urlparse = staticmethod(urlparse)
-
-from .datetimes import registerDateHandler, _parse_date
 from .encodings import convert_to_utf8
-from .exceptions import *
 from .html import _BaseHTMLProcessor
 from . import http
-from . import mixin
 from .mixin import _FeedParserMixin
 from .parsers.loose import _LooseFeedParser
 from .parsers.strict import _StrictFeedParser
 from .sanitizer import replace_doctype
 from .sgml import *
-from .urls import _convert_to_idn, _makeSafeAbsoluteURI
+from .urls import _makeSafeAbsoluteURI
 from .util import FeedParserDict
-
-bytes_ = type(b'')
-unicode_ = type('')
-try:
-    unichr
-    basestring
-except NameError:
-    unichr = chr
-    basestring = str
 
 # List of preferred XML parsers, by SAX driver name.  These will be tried first,
 # but if they're not installed, Python will keep searching through its own list
@@ -133,7 +106,7 @@ def _open_resource(url_file_stream_or_string, etag, modified, agent, referrer, h
     if hasattr(url_file_stream_or_string, 'read'):
         return url_file_stream_or_string.read()
 
-    if isinstance(url_file_stream_or_string, basestring) \
+    if isinstance(url_file_stream_or_string, str) \
        and urllib.parse.urlparse(url_file_stream_or_string)[0] in ('http', 'https', 'ftp', 'file', 'feed'):
         return http.get(url_file_stream_or_string, etag, modified, agent, referrer, handlers, request_headers, result)
 
@@ -154,7 +127,7 @@ def _open_resource(url_file_stream_or_string, etag, modified, agent, referrer, h
         return data
 
     # treat url_file_stream_or_string as string
-    if not isinstance(url_file_stream_or_string, bytes_):
+    if not isinstance(url_file_stream_or_string, bytes):
         return url_file_stream_or_string.encode('utf-8')
     return url_file_stream_or_string
 
@@ -246,7 +219,7 @@ def parse(url_file_stream_or_string, etag=None, modified=None, agent=None, refer
     baseuri = _makeSafeAbsoluteURI(href, contentloc) or _makeSafeAbsoluteURI(contentloc) or href
 
     baselang = result['headers'].get('content-language', None)
-    if isinstance(baselang, bytes_) and baselang is not None:
+    if isinstance(baselang, bytes) and baselang is not None:
         baselang = baselang.decode('utf-8', 'ignore')
 
     if not _XML_AVAILABLE:

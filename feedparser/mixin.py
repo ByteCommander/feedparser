@@ -26,26 +26,14 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-from __future__ import absolute_import, unicode_literals
-
+import base64
+import binascii
 import copy
 import re
 
 from xml.sax.saxutils import escape as _xmlescape
 
-# base64 support for Atom feeds that contain embedded binary data
-try:
-    import base64, binascii
-except ImportError:
-    base64 = binascii = None
-else:
-    # Python 3.1 deprecates decodestring in favor of decodebytes
-    _base64decode = getattr(base64, 'decodebytes', base64.decodestring)
-
-try:
-    from html.entities import name2codepoint, entitydefs
-except ImportError:
-    from htmlentitydefs import name2codepoint, entitydefs
+from html.entities import name2codepoint, entitydefs
 
 from .html import _cp1252
 from .namespaces import _base, cc, dc, georss, itunes, mediarss, psc
@@ -53,11 +41,6 @@ from .sanitizer import _sanitizeHTML, _HTMLSanitizer
 from .util import FeedParserDict
 from .urls import _urljoin, _makeSafeAbsoluteURI, _resolveRelativeURIs
 
-bytes_ = type(b'')
-try:
-    chr = unichr
-except NameError:
-    pass
 
 class _FeedParserMixin(
         _base.Namespace,
@@ -199,7 +182,7 @@ class _FeedParserMixin(
         # track xml:base and xml:lang
         attrsD = dict(attrs)
         baseuri = attrsD.get('xml:base', attrsD.get('base')) or self.baseuri
-        if isinstance(baseuri, bytes_):
+        if isinstance(baseuri, bytes):
             baseuri = baseuri.decode(self.encoding, 'ignore')
         # ensure that self.baseuri is always an absolute URI that
         # uses a whitelisted URI scheme (e.g. not `javscript:`)
@@ -444,7 +427,7 @@ class _FeedParserMixin(
 
         # Ensure each piece is a str for Python 3
         for (i, v) in enumerate(pieces):
-            if isinstance(v, bytes_):
+            if isinstance(v, bytes):
                 pieces[i] = v.decode('utf-8')
 
         if self.version == 'atom10' and self.contentparams.get('type', 'text') == 'application/xhtml+xml':
@@ -477,7 +460,7 @@ class _FeedParserMixin(
         # decode base64 content
         if base64 and self.contentparams.get('base64', 0):
             try:
-                output = _base64decode(output)
+                output = base64.decodebytes(output)
             except binascii.Error:
                 pass
             except binascii.Incomplete:
@@ -485,7 +468,7 @@ class _FeedParserMixin(
             except TypeError:
                 # In Python 3, base64 takes and outputs bytes, not str
                 # This may not be the most correct way to accomplish this
-                output = _base64decode(output.encode('utf-8')).decode('utf-8')
+                output = base64.decodebytes(output.encode('utf-8')).decode('utf-8')
 
         # resolve relative URIs
         if (element in self.can_be_relative_uri) and output:
@@ -524,19 +507,19 @@ class _FeedParserMixin(
             if element in self.can_contain_dangerous_markup:
                 output = _sanitizeHTML(output, self.encoding, self.contentparams.get('type', 'text/html'))
 
-        if self.encoding and isinstance(output, bytes_):
+        if self.encoding and isinstance(output, bytes):
             output = output.decode(self.encoding, 'ignore')
 
         # address common error where people take data that is already
         # utf-8, presume that it is iso-8859-1, and re-encode it.
-        if self.encoding in ('utf-8', 'utf-8_INVALID_PYTHON_3') and not isinstance(output, bytes_):
+        if self.encoding in ('utf-8', 'utf-8_INVALID_PYTHON_3') and not isinstance(output, bytes):
             try:
                 output = output.encode('iso-8859-1').decode('utf-8')
             except (UnicodeEncodeError, UnicodeDecodeError):
                 pass
 
         # map win-1252 extensions to the proper code points
-        if not isinstance(output, bytes_):
+        if not isinstance(output, bytes):
             output = output.translate(_cp1252)
 
         # categories/tags/keywords/whatever are handled in _end_category or _end_tags or _end_itunes_keywords

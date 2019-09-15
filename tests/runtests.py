@@ -23,8 +23,6 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-from __future__ import absolute_import, unicode_literals
-
 __author__ = "Kurt McKee <contactme@kurtmckee.org>"
 __license__ = "BSD 2-clause"
 
@@ -45,12 +43,7 @@ import warnings
 import xml.sax
 import zlib
 
-# Account for stdlib differences between Python 2 and Python 3.
-try:
-    from BaseHTTPServer import HTTPServer
-    from SimpleHTTPServer import SimpleHTTPRequestHandler
-except ImportError:
-    from http.server import HTTPServer, SimpleHTTPRequestHandler
+from http.server import HTTPServer, SimpleHTTPRequestHandler
 
 import feedparser
 import feedparser.api

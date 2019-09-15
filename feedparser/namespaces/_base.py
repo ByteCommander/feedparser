@@ -26,11 +26,9 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-from __future__ import absolute_import, unicode_literals
-
 import copy
 
-from ..datetimes import registerDateHandler, _parse_date
+from ..datetimes import _parse_date
 from ..urls import _makeSafeAbsoluteURI
 from ..util import FeedParserDict
 

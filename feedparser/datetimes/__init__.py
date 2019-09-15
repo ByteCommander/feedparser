@@ -1,5 +1,3 @@
-from __future__ import absolute_import
-
 from .asctime import _parse_date_asctime
 from .greek import _parse_date_greek
 from .hungarian import _parse_date_hungarian

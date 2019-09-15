@@ -1,5 +1,3 @@
-from __future__ import absolute_import, unicode_literals
-
 from .rfc822 import _parse_date_rfc822
 
 _months = ['jan', 'feb', 'mar', 'apr', 'may', 'jun',

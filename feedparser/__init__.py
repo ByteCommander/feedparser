@@ -25,8 +25,6 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE."""
 
-from __future__ import absolute_import, unicode_literals
-
 __author__ = 'Kurt McKee <contactme@kurtmckee.org>'
 __license__ = 'BSD 2-clause'
 __version__ = '5.2.1'

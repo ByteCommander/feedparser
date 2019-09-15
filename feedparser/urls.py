@@ -1,11 +1,6 @@
-from __future__ import absolute_import, unicode_literals
-
 import re
 
-try:
-    import urllib.parse as urlparse
-except ImportError:
-    import urlparse as urlparse
+import urllib.parse as urlparse
 
 from .html import _BaseHTMLProcessor
 
@@ -79,35 +74,13 @@ def _makeSafeAbsoluteURI(base, rel=None):
     return uri
 
 class _RelativeURIResolver(_BaseHTMLProcessor):
-    relative_uris = set([('a', 'href'),
-                     ('applet', 'codebase'),
-                     ('area', 'href'),
-                     ('audio', 'src'),
-                     ('blockquote', 'cite'),
-                     ('body', 'background'),
-                     ('del', 'cite'),
-                     ('form', 'action'),
-                     ('frame', 'longdesc'),
-                     ('frame', 'src'),
-                     ('iframe', 'longdesc'),
-                     ('iframe', 'src'),
-                     ('head', 'profile'),
-                     ('img', 'longdesc'),
-                     ('img', 'src'),
-                     ('img', 'usemap'),
-                     ('input', 'src'),
-                     ('input', 'usemap'),
-                     ('ins', 'cite'),
-                     ('link', 'href'),
-                     ('object', 'classid'),
-                     ('object', 'codebase'),
-                     ('object', 'data'),
-                     ('object', 'usemap'),
-                     ('q', 'cite'),
-                     ('script', 'src'),
-                     ('source', 'src'),
-                     ('video', 'poster'),
-                     ('video', 'src')])
+    relative_uris = {('a', 'href'), ('applet', 'codebase'), ('area', 'href'), ('audio', 'src'), ('blockquote', 'cite'),
+                     ('body', 'background'), ('del', 'cite'), ('form', 'action'), ('frame', 'longdesc'),
+                     ('frame', 'src'), ('iframe', 'longdesc'), ('iframe', 'src'), ('head', 'profile'),
+                     ('img', 'longdesc'), ('img', 'src'), ('img', 'usemap'), ('input', 'src'), ('input', 'usemap'),
+                     ('ins', 'cite'), ('link', 'href'), ('object', 'classid'), ('object', 'codebase'),
+                     ('object', 'data'), ('object', 'usemap'), ('q', 'cite'), ('script', 'src'), ('source', 'src'),
+                     ('video', 'poster'), ('video', 'src')}
 
     def __init__(self, baseuri, encoding, _type):
         _BaseHTMLProcessor.__init__(self, encoding, _type)
