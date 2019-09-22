@@ -12,7 +12,8 @@ setup(
     platforms = ['POSIX', 'Windows'],
     packages = ['feedparser', 'feedparser.datetimes', 'feedparser.namespaces', 'feedparser.parsers'],
     install_requires = [
-        'sgmllib3k;python_version>="3.0"',
+        'sgmllib3k',
+        'aiohttp[speedups]',
     ],
     keywords = ['atom', 'cdf', 'feed', 'parser', 'rdf', 'rss'],
     classifiers = [
