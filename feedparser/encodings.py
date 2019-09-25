@@ -1,5 +1,5 @@
 # Character encoding routines
-# Copyright 2010-2015 Kurt McKee <contactme@kurtmckee.org>
+# Copyright 2010-2019 Kurt McKee <contactme@kurtmckee.org>
 # Copyright 2002-2008 Mark Pilgrim
 # All rights reserved.
 #
@@ -48,7 +48,9 @@ else:
         return chardet_encoding
 
 from .exceptions import (
-    CharacterEncodingOverride, CharacterEncodingUnknown, NonXMLContentType,
+    CharacterEncodingOverride,
+    CharacterEncodingUnknown,
+    NonXMLContentType,
 )
 
 # Each marker represents some of the characters of the opening XML
@@ -69,11 +71,12 @@ RE_XML_DECLARATION = re.compile(r'^<\?xml[^>]*?>')
 # Example: <?xml version="1.0" encoding="utf-8"?>
 RE_XML_PI_ENCODING = re.compile(br'^<\?.*encoding=[\'"](.*?)[\'"].*\?>')
 
+
 def convert_to_utf8(http_headers, data, result):
-    '''Detect and convert the character encoding to UTF-8.
+    """Detect and convert the character encoding to UTF-8.
 
     http_headers is a dictionary
-    data is a raw string (not Unicode)'''
+    data is a raw string (not Unicode)"""
 
     # This is so much trickier than it sounds, it's not even funny.
     # According to RFC 3023 ('XML Media Types'), if the HTTP Content-Type
@@ -118,7 +121,6 @@ def convert_to_utf8(http_headers, data, result):
 
     bom_encoding = ''
     xml_encoding = ''
-    rfc3023_encoding = ''
 
     # Look at the first few bytes of the document to guess what
     # its encoding may be. We only need to decode enough of the
@@ -192,14 +194,22 @@ def convert_to_utf8(http_headers, data, result):
     application_content_types = ('application/xml', 'application/xml-dtd',
                                  'application/xml-external-parsed-entity')
     text_content_types = ('text/xml', 'text/xml-external-parsed-entity')
-    if (http_content_type in application_content_types) or \
-       (http_content_type.startswith('application/') and
-        http_content_type.endswith('+xml')):
+    if (
+            http_content_type in application_content_types
+            or (
+                    http_content_type.startswith('application/')
+                    and http_content_type.endswith('+xml')
+            )
+    ):
         acceptable_content_type = 1
         rfc3023_encoding = http_encoding or xml_encoding or 'utf-8'
-    elif (http_content_type in text_content_types) or \
-         (http_content_type.startswith('text/') and
-          http_content_type.endswith('+xml')):
+    elif (
+            http_content_type in text_content_types
+            or (
+                    http_content_type.startswith('text/')
+                    and http_content_type.endswith('+xml')
+            )
+    ):
         acceptable_content_type = 1
         rfc3023_encoding = http_encoding or 'us-ascii'
     elif http_content_type.startswith('text/'):

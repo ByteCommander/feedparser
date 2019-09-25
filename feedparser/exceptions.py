@@ -1,5 +1,5 @@
 # Exceptions used throughout feedparser
-# Copyright 2010-2015 Kurt McKee <contactme@kurtmckee.org>
+# Copyright 2010-2019 Kurt McKee <contactme@kurtmckee.org>
 # Copyright 2002-2008 Mark Pilgrim
 # All rights reserved.
 #
@@ -34,17 +34,22 @@ __all__ = [
     'UndeclaredNamespace',
 ]
 
+
 class ThingsNobodyCaresAboutButMe(Exception):
     pass
+
 
 class CharacterEncodingOverride(ThingsNobodyCaresAboutButMe):
     pass
 
+
 class CharacterEncodingUnknown(ThingsNobodyCaresAboutButMe):
     pass
 
+
 class NonXMLContentType(ThingsNobodyCaresAboutButMe):
     pass
+
 
 class UndeclaredNamespace(Exception):
     pass

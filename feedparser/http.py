@@ -1,3 +1,30 @@
+# Copyright 2010-2019 Kurt McKee <contactme@kurtmckee.org>
+# Copyright 2002-2008 Mark Pilgrim
+# All rights reserved.
+#
+# This file is a part of feedparser.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+#
+# * Redistributions of source code must retain the above copyright notice,
+#   this list of conditions and the following disclaimer.
+# * Redistributions in binary form must reproduce the above copyright notice,
+#   this list of conditions and the following disclaimer in the documentation
+#   and/or other materials provided with the distribution.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS 'AS IS'
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+# ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+# LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+# CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+# SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+# INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+# CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+# POSSIBILITY OF SUCH DAMAGE.
+
 import datetime
 import gzip
 import re
@@ -7,16 +34,17 @@ import zlib
 import urllib.parse
 import urllib.request
 
-from io import BytesIO as _StringIO
+from io import BytesIO
 
 import base64
 
 from .datetimes import _parse_date
-from .urls import _convert_to_idn
+from .urls import convert_to_idn
 
 # HTTP "Accept" header to send to servers when downloading feeds.  If you don't
 # want to send an Accept header, set this to None.
 ACCEPT_HEADER = "application/atom+xml,application/rdf+xml,application/rss+xml,application/x-netcdf,application/xml;q=0.9,text/xml;q=0.2,*/*;q=0.1"
+
 
 class _FeedURLHandler(urllib.request.HTTPDigestAuthHandler, urllib.request.HTTPRedirectHandler, urllib.request.HTTPDefaultErrorHandler):
     def http_error_default(self, req, fp, code, msg, headers):
@@ -26,11 +54,11 @@ class _FeedURLHandler(urllib.request.HTTPDigestAuthHandler, urllib.request.HTTPR
         return fp
 
     def http_error_301(self, req, fp, code, msg, hdrs):
-        result = urllib.request.HTTPRedirectHandler.http_error_301(self, req, fp,
-                                                            code, msg, hdrs)
+        result = urllib.request.HTTPRedirectHandler.http_error_301(self, req, fp, code, msg, hdrs)
         result.status = code
         result.newurl = result.geturl()
         return result
+
     # The default implementations in urllib.request.HTTPRedirectHandler
     # are identical, so hardcoding a http_error_301 call above
     # won't affect anything
@@ -50,8 +78,7 @@ class _FeedURLHandler(urllib.request.HTTPDigestAuthHandler, urllib.request.HTTPR
         # the request with the appropriate digest auth headers instead.
         # This evil genius hack has been brought to you by Aaron Swartz.
         host = urllib.parse.urlparse(req.get_full_url())[1]
-        if base64 is None or 'Authorization' not in req.headers \
-                          or 'WWW-Authenticate' not in headers:
+        if 'Authorization' not in req.headers or 'WWW-Authenticate' not in headers:
             return self.http_error_default(req, fp, code, msg, headers)
         auth = base64.decodebytes(req.headers['Authorization'].split(' ')[1])
         user, passw = auth.split(':')
@@ -60,6 +87,7 @@ class _FeedURLHandler(urllib.request.HTTPDigestAuthHandler, urllib.request.HTTPR
         retry = self.http_error_auth_reqed('www-authenticate', host, req, headers)
         self.reset_retry_count()
         return retry
+
 
 def _build_urllib2_request(url, agent, accept_header, etag, modified, referrer, auth, request_headers):
     request = urllib.request.Request(url)
@@ -80,14 +108,7 @@ def _build_urllib2_request(url, agent, accept_header, etag, modified, referrer, 
         request.add_header('If-Modified-Since', '%s, %02d %s %04d %02d:%02d:%02d GMT' % (short_weekdays[modified[6]], modified[2], months[modified[1] - 1], modified[0], modified[3], modified[4], modified[5]))
     if referrer:
         request.add_header('Referer', referrer)
-    if gzip and zlib:
-        request.add_header('Accept-encoding', 'gzip, deflate')
-    elif gzip:
-        request.add_header('Accept-encoding', 'gzip')
-    elif zlib:
-        request.add_header('Accept-encoding', 'deflate')
-    else:
-        request.add_header('Accept-encoding', '')
+    request.add_header('Accept-encoding', 'gzip, deflate')
     if auth:
         request.add_header('Authorization', 'Basic %s' % auth)
     if accept_header:
@@ -96,8 +117,9 @@ def _build_urllib2_request(url, agent, accept_header, etag, modified, referrer, 
     # [('Cookie','Something'),('x-special-header','Another Value')]
     for header_name, header_value in request_headers.items():
         request.add_header(header_name, header_value)
-    request.add_header('A-IM', 'feed') # RFC 3229 support
+    request.add_header('A-IM', 'feed')  # RFC 3229 support
     return request
+
 
 def get(url, etag=None, modified=None, agent=None, referrer=None, handlers=None, request_headers=None, result=None):
     if handlers is None:
@@ -113,10 +135,11 @@ def get(url, etag=None, modified=None, agent=None, referrer=None, handlers=None,
     elif url.startswith('feed:'):
         url = 'http:' + url[5:]
     if not agent:
+        from . import USER_AGENT
         agent = USER_AGENT
     # Test for inline user:password credentials for HTTP basic auth
     auth = None
-    if base64 and not url.startswith('ftp:'):
+    if not url.startswith('ftp:'):
         parsed = urllib.parse.urlsplit(url, allow_fragments=False)
         if parsed.netloc:
             user_passwd, has_auth, realhost = parsed.netloc.rpartition('@')
@@ -126,23 +149,23 @@ def get(url, etag=None, modified=None, agent=None, referrer=None, handlers=None,
 
     # iri support
     if not isinstance(url, bytes):
-        url = _convert_to_idn(url)
+        url = convert_to_idn(url)
 
     # try to open with urllib2 (to use optional headers)
     request = _build_urllib2_request(url, agent, ACCEPT_HEADER, etag, modified, referrer, auth, request_headers)
     opener = urllib.request.build_opener(*tuple(handlers + [_FeedURLHandler()]))
-    opener.addheaders = [] # RMK - must clear so we only send our custom User-Agent
+    opener.addheaders = []  # RMK - must clear so we only send our custom User-Agent
     f = opener.open(request)
     data = f.read()
     f.close()
 
     # lowercase all of the HTTP headers for comparisons per RFC 2616
-    result['headers'] = dict((k.lower(), v) for k, v in f.headers.items())
+    result['headers'] = {k.lower(): v for k, v in f.headers.items()}
 
     # if feed is gzip-compressed, decompress it
     if data and 'gzip' in result['headers'].get('content-encoding', ''):
         try:
-            data = gzip.GzipFile(fileobj=_StringIO(data)).read()
+            data = gzip.GzipFile(fileobj=BytesIO(data)).read()
         except (EOFError, IOError, struct.error) as e:
             # IOError can occur if the gzip header is bad.
             # struct.error can occur if the data is damaged.
@@ -156,7 +179,7 @@ def get(url, etag=None, modified=None, agent=None, referrer=None, handlers=None,
     elif data and 'deflate' in result['headers'].get('content-encoding', ''):
         try:
             data = zlib.decompress(data)
-        except zlib.error as e:
+        except zlib.error:
             try:
                 # The data may have no headers and no checksum.
                 data = zlib.decompress(data, -15)
